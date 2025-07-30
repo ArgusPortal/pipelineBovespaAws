@@ -1,6 +1,12 @@
 
 # Pipeline de Dados da B3 na AWS - Tech Challenge FIAP
 
+
+
+https://g.co/gemini/share/269056fca3f3 - `Link para página de apresentação`
+
+
+
 ## 1. Introdução
 Este repositório contém a implementação de um pipeline de dados **serverless na AWS**, desenvolvido como parte do Tech Challenge da Fase 2 da Pós-graduação em **Machine Learning Engineering da FIAP**.
 
