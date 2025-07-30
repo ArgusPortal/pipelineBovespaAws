@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Interativo: Pipeline de Dados da B3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Tech -->
+    <!-- Application Structure Plan: A tabbed, single-page dashboard designed for a technical audience. Key sections include an interactive architecture diagram, detailed component exploration via clickable cards/modals, a results section with live Chart.js visualizations, and an accordion for technical challenges. This non-linear structure prioritizes user-driven exploration over the linear format of the source report, allowing users to quickly access the information most relevant to them. Gemini features are added to each section to provide deeper, contextual explanations and insights. -->
+    <!-- Visualization & Content Choices: 
+    - Report Info: Architecture Diagram -> Goal: Organize/Inform -> Viz/Presentation: Static Image Diagram -> Interaction: None -> Justification: User provided a specific diagram to be used. Method: IMG tag.
+    - Report Info: Component Details -> Goal: Inform -> Viz/Presentation: Clickable Cards with Modals -> Interaction: Click to reveal details -> Justification: Reduces initial information overload, allows progressive disclosure. Method: HTML/CSS with JS events. Pre-defined text is used to explain components in context.
+    - Report Info: Analysis Results (Top 10 Stocks) -> Goal: Compare/Inform -> Viz/Presentation: Horizontal Bar Chart -> Interaction: Tooltips on hover -> Justification: Clearly visualizes rankings and proportions. Library: Chart.js (Canvas). Pre-defined text is used to generate business insights from chart data.
+    - Report Info: Technical Challenges -> Goal: Inform/Organize -> Viz/Presentation: Accordion -> Interaction: Click to expand/collapse -> Justification: Organizes complex information concisely. Method: HTML/CSS with JS events. Pre-defined text is used to suggest alternative technical solutions.
+    - CONFIRMATION: NO SVG/Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .tab-active {
+            border-color: #0ea5e9; /* sky-500 */
+            color: #0ea5e9; /* sky-500 */
+            background-color: #f0f9ff; /* sky-50 */
+        }
+        .tab-inactive {
+            border-color: transparent;
+            color: #475569; /* slate-600 */
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+        .modal-backdrop {
+            transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Relatório Interativo do Projeto</h1>
+            <p class="text-5xl md:text-6xl font-extrabold text-sky-600 mt-2">Pipeline de Dados da B3</p>
+            <p class="mt-4 max-w-3xl mx-auto text-slate-600">
+                Uma exploração interativa da arquitetura, implementação e resultados do pipeline de dados serverless para ingestão e processamento da composição do índice Ibovespa.
+            </p>
+        </header>
+
+        <nav class="mb-8 border-b border-slate-200">
+            <ul class="flex flex-wrap -mb-px justify-center text-sm font-medium text-center">
+                <li class="mr-2">
+                    <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg tab-active" data-tab="visao-geral">Visão Geral</button>
+                </li>
+                <li class="mr-2">
+                    <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg tab-inactive" data-tab="componentes">Componentes</button>
+                </li>
+                <li class="mr-2">
+                    <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg tab-inactive" data-tab="resultados">Resultados</button>
+                </li>
+                <li class="mr-2">
+                    <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg tab-inactive" data-tab="desafios">Desafios Técnicos</button>
+                </li>
+            </ul>
+        </nav>
+
+        <main>
+            <section id="visao-geral" class="content-section active">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-2xl font-bold mb-4 text-slate-800">Arquitetura do Pipeline</h2>
+                    <p class="mb-6 text-slate-600">
+                        A solução foi arquitetada em um padrão event-driven, desacoplando as responsabilidades de coleta, orquestração e processamento. O diagrama abaixo ilustra o fluxo completo de dados, desde a fonte na B3 até a camada de análise no Amazon Athena.
+                    </p>
+                    <div class="relative p-4 md:p-8 bg-slate-100 rounded-lg">
+                        <img src="https://i.postimg.cc/pXs0L4Cn/arq.png" alt="Diagrama da Arquitetura do Pipeline de Dados da B3" class="w-full max-w-5xl mx-auto rounded-lg shadow-lg">
+                    </div>
+                </div>
+            </section>
+
+            <section id="componentes" class="content-section">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-2xl font-bold mb-4 text-slate-800">Detalhes dos Componentes</h2>
+                    <p class="mb-6 text-slate-600">
+                        Cada serviço na arquitetura desempenha um papel crucial. Explore os cartões abaixo para entender a lógica e a responsabilidade de cada componente do pipeline.
+                    </p>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="component-cards">
+                        <div class="component-card border border-slate-200 p-5 rounded-lg flex flex-col">
+                            <h3 class="font-bold text-lg text-amber-700">🕒 EventBridge Rule</h3>
+                            <p class="text-sm text-slate-600 mt-2 flex-grow">Configurado com uma expressão `cron` para execução diária, atua como o gatilho agendado que inicia todo o pipeline de ingestão de dados de forma autônoma.</p>
+                            <button class="ia-explain-btn mt-4 text-xs font-semibold text-sky-600 hover:text-sky-800 self-start" data-component-key="eventbridge">✨ Explicar com IA</button>
+                        </div>
+                        <div class="component-card border border-slate-200 p-5 rounded-lg flex flex-col">
+                            <h3 class="font-bold text-lg text-orange-700">λ Lambda: scrapb3</h3>
+                            <p class="text-sm text-slate-600 mt-2 flex-grow">Responsável pela coleta dos dados. Executa um web scraping da API da B3, trata a paginação e serializa os dados brutos para o formato Parquet, depositando-os na zona `raw` do S3.</p>
+                             <button class="ia-explain-btn mt-4 text-xs font-semibold text-sky-600 hover:text-sky-800 self-start" data-component-key="lambda-scrapb3">✨ Explicar com IA</button>
+                        </div>
+                        <div class="component-card border border-slate-200 p-5 rounded-lg flex flex-col">
+                            <h3 class="font-bold text-lg text-red-700">🗃️ S3 Bucket: raw/</h3>
+                            <p class="text-sm text-slate-600 mt-2 flex-grow">Atua como a zona de "landing" ou "bronze" do Data Lake. Armazena os dados brutos, imutáveis e não processados, servindo como a fonte da verdade para o restante do pipeline.</p>
+                             <button class="ia-explain-btn mt-4 text-xs font-semibold text-sky-600 hover:text-sky-800 self-start" data-component-key="s3-raw">✨ Explicar com IA</button>
+                        </div>
+                        <div class="component-card border border-slate-200 p-5 rounded-lg flex flex-col">
+                            <h3 class="font-bold text-lg text-orange-700">λ Lambda: orquestrador-glue</h3>
+                            <p class="text-sm text-slate-600 mt-2 flex-grow">Acionada por eventos de criação de objetos no S3, esta função orquestra o ETL. Primeiro, ela limpa os diretórios de destino para garantir a idempotência e, em seguida, inicia o Job do AWS Glue.</p>
+                             <button class="ia-explain-btn mt-4 text-xs font-semibold text-sky-600 hover:text-sky-800 self-start" data-component-key="lambda-orquestrador">✨ Explicar com IA</button>
+                        </div>
+                        <div class="component-card border border-slate-200 p-5 rounded-lg flex flex-col">
+                            <h3 class="font-bold text-lg text-cyan-700">✨ AWS Glue Job</h3>
+                            <p class="text-sm text-slate-600 mt-2 flex-grow">O coração do ETL. Construído no Glue Studio, executa transformações complexas em PySpark, como limpeza de dados, conversão de tipos, enriquecimento com novas colunas e agregação, gerando duas saídas distintas.</p>
+                             <button class="ia-explain-btn mt-4 text-xs font-semibold text-sky-600 hover:text-sky-800 self-start" data-component-key="glue">✨ Explicar com IA</button>
+                        </div>
+                        <div class="component-card border border-slate-200 p-5 rounded-lg flex flex-col">
+                            <h3 class="font-bold text-lg text-green-700">🗂️ S3 Buckets: refined/ & summarized/</h3>
+                            <p class="text-sm text-slate-600 mt-2 flex-grow">As zonas "silver" e "gold" do Data Lake. `refined/` armazena os dados detalhados e particionados, enquanto `summarized/` contém os dados agregados, ambos prontos para consumo analítico.</p>
+                             <button class="ia-explain-btn mt-4 text-xs font-semibold text-sky-600 hover:text-sky-800 self-start" data-component-key="s3-refined">✨ Explicar com IA</button>
+                        </div>
+                         <div class="component-card border border-slate-200 p-5 rounded-lg flex flex-col">
+                            <h3 class="font-bold text-lg text-blue-700">📖 Glue Data Catalog</h3>
+                            <p class="text-sm text-slate-600 mt-2 flex-grow">Atua como o metastore central. O Job do Glue atualiza automaticamente as tabelas e partições, tornando os dados no S3 "pesquisáveis" e compreensíveis para serviços de consulta como o Athena.</p>
+                             <button class="ia-explain-btn mt-4 text-xs font-semibold text-sky-600 hover:text-sky-800 self-start" data-component-key="catalog">✨ Explicar com IA</button>
+                        </div>
+                        <div class="component-card border border-slate-200 p-5 rounded-lg flex flex-col">
+                            <h3 class="font-bold text-lg text-indigo-700">🔍 Amazon Athena</h3>
+                            <p class="text-sm text-slate-600 mt-2 flex-grow">Serviço de consulta interativo que permite a análise dos dados no S3 usando SQL padrão. Ele lê os metadados do Glue Data Catalog para executar consultas performáticas, especialmente em dados particionados.</p>
+                             <button class="ia-explain-btn mt-4 text-xs font-semibold text-sky-600 hover:text-sky-800 self-start" data-component-key="athena">✨ Explicar com IA</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="resultados" class="content-section">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-2xl font-bold mb-4 text-slate-800">Análise e Resultados</h2>
+                    <p class="mb-6 text-slate-600">
+                        O pipeline culmina em dados refinados e prontos para análise. As visualizações abaixo demonstram insights chave sobre a composição do índice Ibovespa.
+                    </p>
+                    <div class="space-y-12">
+                        <div>
+                            <h3 class="text-xl font-semibold text-center mb-4">Top 10 Ações por Participação no IBOV</h3>
+                            <div class="chart-container">
+                                <canvas id="top10Chart"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-center mb-4">Participação Agregada por Tipo de Ação</h3>
+                            <div class="chart-container" style="max-width: 450px; height: 450px;">
+                                <canvas id="typeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-12 text-center">
+                        <button id="ia-insight-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                            ✨ Gerar Insight Analítico com IA
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="desafios" class="content-section">
+                 <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-2xl font-bold mb-4 text-slate-800">Desafios Técnicos Superados</h2>
+                    <p class="mb-6 text-slate-600">
+                        A construção do pipeline envolveu a superação de diversos desafios técnicos. Explore as seções abaixo para entender os problemas encontrados e as soluções implementadas.
+                    </p>
+                    <div class="space-y-4">
+                        <div class="accordion-item border border-slate-200 rounded-lg">
+                            <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                Compatibilidade de Dependências (GLIBC)
+                                <span class="accordion-icon text-xl">+</span>
+                            </button>
+                            <div class="accordion-content px-4">
+                                <p class="text-sm text-slate-600 pb-4">
+                                    <strong>Problema:</strong> A Lambda Layer, construída em um ambiente de desenvolvimento padrão, continha binários incompatíveis com o runtime do Lambda (Amazon Linux 2), resultando em erros de 'GLIBC'.<br>
+                                    <strong>Solução:</strong> A Layer foi reconstruída utilizando Docker com a imagem oficial `public.ecr.aws/lambda/python:3.10`, garantindo 100% de compatibilidade binária com o ambiente de execução do Lambda.
+                                </p>
+                                <button class="ia-optimize-btn mb-4 text-xs font-semibold text-sky-600 hover:text-sky-800 self-start" data-challenge-key="glibc">✨ Sugerir Otimização com IA</button>
+                            </div>
+                        </div>
+                        <div class="accordion-item border border-slate-200 rounded-lg">
+                            <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                Limites de Tamanho da Lambda Layer
+                                <span class="accordion-icon text-xl">+</span>
+                            </button>
+                            <div class="accordion-content px-4">
+                                <p class="text-sm text-slate-600 pb-4">
+                                    <strong>Problema:</strong> As dependências (`pandas`, `pyarrow`) excediam os limites de tamanho da Lambda (50MB para upload direto, 250MB descompactado).<br>
+                                    <strong>Solução:</strong> Foi aplicado um processo de otimização agressiva, utilizando `strip` para remover símbolos de depuração e deletando manualmente módulos não essenciais da `pyarrow` para reduzir drasticamente o tamanho final do pacote.
+                                </p>
+                                <button class="ia-optimize-btn mb-4 text-xs font-semibold text-sky-600 hover:text-sky-800 self-start" data-challenge-key="size-limit">✨ Sugerir Otimização com IA</button>
+                            </div>
+                        </div>
+                        <div class="accordion-item border border-slate-200 rounded-lg">
+                            <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                Idempotência e Duplicação de Dados
+                                <span class="accordion-icon text-xl">+</span>
+                            </button>
+                            <div class="accordion-content px-4">
+                                <p class="text-sm text-slate-600 pb-4">
+                                    <strong>Problema:</strong> Reexecuções do Job do Glue para testes resultavam em dados duplicados na camada `refined`, pois o Glue adicionava novos arquivos sem remover os antigos.<br>
+                                    <strong>Solução:</strong> Foi implementada uma Lambda orquestradora (`orquestrador-glue`) que executa uma lógica de `purge` (limpeza) nos diretórios de destino do S3 antes de iniciar o Job do Glue, garantindo que cada execução seja limpa e idempotente.
+                                </p>
+                                <button class="ia-optimize-btn mb-4 text-xs font-semibold text-sky-600 hover:text-sky-800 self-start" data-challenge-key="idempotency">✨ Sugerir Otimização com IA</button>
+                            </div>
+                        </div>
+                         <div class="accordion-item border border-slate-200 rounded-lg">
+                            <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                                Qualidade e Formato dos Dados de Origem
+                                <span class="accordion-icon text-xl">+</span>
+                            </button>
+                            <div class="accordion-content px-4">
+                                <p class="text-sm text-slate-600 pb-4">
+                                    <strong>Problema:</strong> Os dados numéricos da B3 utilizavam padrões de formatação brasileiros (vírgula como separador decimal, ponto como separador de milhar), o que causava falhas de `cast` para tipos numéricos no Glue.<br>
+                                    <strong>Solução:</strong> A lógica de transformação foi encapsulada em um nó "Custom Transform" em PySpark, utilizando `regexp_replace` para normalizar os formatos numéricos antes de convertê-los para `double` e `long`.
+                                </p>
+                                <button class="ia-optimize-btn mb-4 text-xs font-semibold text-sky-600 hover:text-sky-800 self-start" data-challenge-key="data-format">✨ Sugerir Otimização com IA</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="ia-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none modal-backdrop">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col modal-content scale-95">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="modal-title" class="text-xl font-bold text-slate-800">Resposta da IA</h3>
+                <button id="modal-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl leading-none">&times;</button>
+            </div>
+            <div id="modal-body" class="p-6 overflow-y-auto">
+                <div id="modal-text-content" class="text-slate-700 space-y-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabs = document.querySelectorAll('.tab-button');
+            const sections = document.querySelectorAll('.content-section');
+            const accordionItems = document.querySelectorAll('.accordion-item');
+            
+            const modal = document.getElementById('ia-modal');
+            const modalContent = modal.querySelector('.modal-content');
+            const modalTitle = document.getElementById('modal-title');
+            const modalTextContent = document.getElementById('modal-text-content');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+
+            const staticResponses = {
+                explain: {
+                    eventbridge: "O Amazon EventBridge, neste pipeline, funciona como um relógio agendador (cron job). Sua única responsabilidade é 'acordar' a função Lambda `scrapb3` em um horário pré-definido (diariamente), iniciando todo o processo de coleta de dados. Ele garante a automação e a consistência temporal da ingestão, eliminando a necessidade de qualquer intervenção manual.",
+                    'lambda-scrapb3': "Esta função Lambda é o ponto de partida do trabalho com os dados. Ela é altamente especializada em se comunicar com a API da B3, navegar por suas páginas de resultados (paginação) e extrair a composição do índice. Utiliza as bibliotecas `requests` para a comunicação e `pandas`/`pyarrow` para estruturar e salvar os dados brutos em um formato colunar otimizado (Parquet) na primeira zona do nosso Data Lake.",
+                    's3-raw': "A pasta `raw/` no S3 é a zona de pouso (landing zone) dos nossos dados. Ela armazena os dados exatamente como foram coletados, sem nenhuma transformação. Este princípio de armazenar o dado bruto é fundamental em um Data Lake, pois garante que tenhamos uma fonte da verdade imutável que pode ser reprocessada no futuro, caso as regras de negócio mudem.",
+                    'lambda-orquestrador': "Esta função Lambda atua como o maestro do pipeline de ETL. Acionada pela chegada de um novo arquivo na pasta `raw/`, ela executa duas tarefas essenciais: primeiro, realiza a limpeza dos diretórios de destino (`refined/` e `summarized/`) para garantir a idempotência do processo (evitando duplicatas em reexecuções). Em seguida, ela inicia o Job do AWS Glue, passando a ele a localização do novo arquivo a ser processado.",
+                    glue: "O AWS Glue Job é o coração do nosso processo de ETL. Ele utiliza o poder do Apache Spark para executar transformações em larga escala. No nosso caso, ele lê os dados Parquet da zona `raw`, realiza a limpeza de formatos numéricos, converte tipos de dados, enriquece os dados com novas colunas (como `ano`, `mes`, `dia`, e métricas de latência) e, por fim, cria dois conjuntos de dados distintos: um detalhado e particionado e outro sumarizado.",
+                    's3-refined': "Estas pastas representam as camadas mais valiosas do nosso Data Lake. A `refined/` (ou zona silver) contém os dados detalhados, limpos, enriquecidos e particionados por data e código de ação, otimizados para consultas analíticas de alta performance. A `summarized/` (ou zona gold) contém dados já agregados, prontos para consumo por dashboards e relatórios gerenciais.",
+                    catalog: "O Glue Data Catalog é o cérebro do nosso Data Lake. Ele funciona como um catálogo central de metadados. O Job do Glue automaticamente registra e atualiza as informações sobre nossas tabelas (esquema, localização no S3, partições). Isso permite que serviços como o Amazon Athena descubram e consultem os dados sem precisar saber os detalhes de onde ou como os arquivos estão fisicamente armazenados.",
+                    athena: "O Amazon Athena é a interface de análise do nosso Data Lake. Ele permite que qualquer usuário com conhecimento de SQL execute consultas diretamente sobre os dados que estão no S3. Ele utiliza as informações do Glue Data Catalog para encontrar e ler os dados de forma otimizada, aproveitando o particionamento para reduzir custos e aumentar drasticamente a velocidade das consultas."
+                },
+                insight: `A análise dos dados revela uma forte concentração do Ibovespa em poucos ativos, principalmente dos setores de commodities (mineração, petróleo) e financeiro. As 10 principais ações correspondem a uma parcela significativa do peso total do índice. Além disso, a predominância de ações Ordinárias (ON) e Preferenciais (PN) reflete a estrutura de capital tradicional das grandes empresas brasileiras. Para um gestor de portfólio, isso sinaliza que a performance do índice é altamente sensível às flutuações desses poucos papéis, indicando um risco de concentração e uma menor representatividade de outros setores da economia.`,
+                optimization: {
+                    glibc: "Uma estratégia complementar robusta é utilizar **Imagens de Contêiner Lambda** em vez de Layers. Ao empacotar a função e suas dependências em uma imagem de contêiner baseada na imagem oficial da AWS para Amazon Linux 2, você tem controle total sobre o ambiente, eliminando qualquer risco de incompatibilidade de 'GLIBC' ou outras bibliotecas do sistema. Essa abordagem também simplifica o gerenciamento de dependências complexas e é a prática recomendada para cargas de trabalho de produção.",
+                    'size-limit': "Para dependências extremamente grandes que, mesmo após otimização, se aproximam do limite, a melhor prática é usar **Imagens de Contêiner Lambda**. O limite para imagens de contêiner é de **10 GB**, o que elimina completamente a preocupação com o tamanho. Além disso, a AWS otimiza o cache de layers da imagem, resultando em cold starts muitas vezes mais rápidos do que para funções com Layers muito grandes.",
+                    idempotency: `Uma arquitetura alternativa e ainda mais desacoplada seria usar o **AWS Step Functions**. O S3 Trigger acionaria uma máquina de estados do Step Functions que orquestraria o fluxo:\n1.  **Primeiro passo:** Uma função Lambda para realizar a limpeza (purge) das pastas de destino.\n2.  **Segundo passo:** A própria definição do Step Functions iniciaria o Job do Glue, esperando por sua conclusão.\nEsta abordagem oferece maior visibilidade, tratamento de erros e resiliência, com um workflow visual de toda a orquestração.`,
+                    'data-format': `Para aumentar a resiliência, a lógica de transformação no Glue poderia ser aprimorada com um **tratamento de "dead-letter queue" (DLQ)**. No nó "Custom Transform", poderíamos envolver a lógica de conversão em um \`try-except\`. Linhas que falharem na conversão (por exemplo, um formato numérico inesperado) não quebrariam o job. Em vez disso, seriam separadas em um novo DataFrame e salvas em uma localização específica no S3 (a DLQ), permitindo análise posterior da causa da falha sem interromper o processamento dos registros válidos.`
+                }
+            };
+            
+            function showModal(title, text) {
+                modalTitle.textContent = title;
+                modalTextContent.innerHTML = text.replace(/\n/g, '<br>');
+                
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                modalContent.classList.remove('scale-95');
+                
+                document.body.style.overflow = 'hidden';
+            }
+
+            function hideModal() {
+                modal.classList.add('opacity-0');
+                modalContent.classList.add('scale-95');
+                
+                setTimeout(() => {
+                    modal.classList.add('pointer-events-none');
+                    document.body.style.overflow = 'auto';
+                }, 300);
+            }
+            
+            modalCloseBtn.addEventListener('click', hideModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideModal();
+                }
+            });
+
+            document.querySelectorAll('.ia-explain-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const componentKey = e.target.dataset.componentKey;
+                    const card = e.target.closest('.component-card');
+                    const title = card.querySelector('h3').textContent.trim();
+                    const responseText = staticResponses.explain[componentKey] || "Explicação não encontrada.";
+                    showModal(`IA Explica: ${title}`, responseText);
+                });
+            });
+
+            document.getElementById('ia-insight-btn').addEventListener('click', () => {
+                const responseText = staticResponses.insight;
+                showModal('IA Gera: Insight Analítico', responseText);
+            });
+
+            document.querySelectorAll('.ia-optimize-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const challengeKey = e.target.dataset.challengeKey;
+                    const accordionItem = e.target.closest('.accordion-item');
+                    const title = accordionItem.querySelector('.accordion-header').textContent.trim();
+                    const responseText = staticResponses.optimization[challengeKey] || "Sugestão não encontrada.";
+                    showModal(`IA Sugere: Otimização para ${title}`, responseText);
+                });
+            });
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.dataset.tab;
+                    tabs.forEach(t => t.classList.replace('tab-active', 'tab-inactive'));
+                    tab.classList.replace('tab-inactive', 'tab-active');
+                    sections.forEach(s => s.classList.toggle('active', s.id === tabId));
+                });
+            });
+
+            accordionItems.forEach(item => {
+                const header = item.querySelector('.accordion-header');
+                const content = item.querySelector('.accordion-content');
+                const icon = item.querySelector('.accordion-icon');
+                header.addEventListener('click', () => {
+                    const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
+                    if (isExpanded) {
+                        content.style.maxHeight = '0px';
+                        icon.textContent = '+';
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                        icon.textContent = '-';
+                    }
+                });
+            });
+
+            const top10Data = {
+                labels: ['VALE3', 'PETR4', 'ITUB4', 'BBDC4', 'B3SA3', 'PETR3', 'ELET3', 'ABEV3', 'WEGE3', 'RENT3'],
+                datasets: [{
+                    label: 'Participação (%)',
+                    data: [13.5, 7.2, 6.8, 5.1, 4.5, 3.8, 3.2, 2.9, 2.5, 2.1],
+                    backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(255, 99, 132, 0.6)', 'rgba(75, 192, 192, 0.6)', 'rgba(255, 206, 86, 0.6)', 'rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)', 'rgba(99, 255, 132, 0.6)', 'rgba(132, 99, 255, 0.6)', 'rgba(201, 203, 207, 0.6)', 'rgba(255, 159, 241, 0.6)'],
+                    borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)', 'rgba(75, 192, 192, 1)', 'rgba(255, 206, 86, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)', 'rgba(99, 255, 132, 1)', 'rgba(132, 99, 255, 1)', 'rgba(201, 203, 207, 1)', 'rgba(255, 159, 241, 1)'],
+                    borderWidth: 1
+                }]
+            };
+
+            const top10Ctx = document.getElementById('top10Chart').getContext('2d');
+            new Chart(top10Ctx, {
+                type: 'bar',
+                data: top10Data,
+                options: {
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${c.raw.toFixed(2)}%` } }
+                    },
+                    scales: { x: { beginAtZero: true, title: { display: true, text: 'Participação (%)' } } }
+                }
+            });
+
+            const typeData = {
+                labels: ['ON', 'PN', 'UNIT', 'PNB', 'PNA'],
+                datasets: [{
+                    label: 'Participação Agregada (%)',
+                    data: [76.37, 35.71, 8.44, 1.90, 0.44],
+                    backgroundColor: ['rgba(54, 162, 235, 0.7)', 'rgba(255, 99, 132, 0.7)', 'rgba(75, 192, 192, 0.7)', 'rgba(255, 206, 86, 0.7)', 'rgba(153, 102, 255, 0.7)'],
+                    hoverOffset: 4
+                }]
+            };
+
+            const typeCtx = document.getElementById('typeChart').getContext('2d');
+            new Chart(typeCtx, {
+                type: 'doughnut',
+                data: typeData,
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { callbacks: { label: (c) => ` ${c.label}: ${c.raw.toFixed(2)}%` } }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
